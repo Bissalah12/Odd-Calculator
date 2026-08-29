@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stake Split — Hedge Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F14;
+    --card:#121821;
+    --card-line:#232B37;
+    --ink:#E8ECF1;
+    --ink-dim:#8A96A6;
+    --gold:#C9A227;
+    --green:#2FBF71;
+    --red:#E5484D;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:20px 16px 60px;
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+  header{margin-bottom:22px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    font-weight:700;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink-dim);font-size:14px;line-height:1.5;margin:0;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    margin:0 0 14px;
+    font-weight:500;
+  }
+
+  .stake-row{display:flex;align-items:center;gap:10px;}
+  .currency-select{
+    background:#0E141C;
+    border:1px solid var(--card-line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:12px 10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+  }
+  input[type=number]{
+    background:#0E141C;
+    border:1px solid var(--card-line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:12px 12px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:17px;
+    width:100%;
+    outline:none;
+  }
+  input[type=number]:focus, input[type=text]:focus{border-color:var(--gold);}
+  input[type=text]{
+    background:#0E141C;
+    border:1px solid var(--card-line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:12px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    width:100%;
+    outline:none;
+  }
+
+  .outcome{
+    display:grid;
+    grid-template-columns:1fr 100px 34px;
+    gap:8px;
+    margin-bottom:10px;
+    align-items:center;
+  }
+  .outcome-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-bottom:4px;
+    display:block;
+  }
+  .remove-btn{
+    background:none;
+    border:1px solid var(--card-line);
+    color:var(--ink-dim);
+    border-radius:8px;
+    width:34px;
+    height:42px;
+    font-size:16px;
+    cursor:pointer;
+    align-self:flex-end;
+  }
+  .remove-btn:hover{border-color:var(--red);color:var(--red);}
+
+  .add-btn{
+    width:100%;
+    background:none;
+    border:1px dashed var(--card-line);
+    color:var(--ink-dim);
+    border-radius:10px;
+    padding:11px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .add-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* stacked bar — signature element */
+  .bar{
+    display:flex;
+    width:100%;
+    height:38px;
+    border-radius:8px;
+    overflow:hidden;
+    margin:16px 0 12px;
+    border:1px solid var(--card-line);
+  }
+  .bar-seg{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    color:#0B0F14;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+
+  .result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:9px 0;
+    border-bottom:1px solid var(--card-line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .result-label{font-size:13px;color:var(--ink-dim);}
+  .result-value{
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    font-weight:500;
+  }
+  .stake-name{
+    font-size:13px;
+    color:var(--ink-dim);
+    display:block;
+    margin-bottom:1px;
+  }
+
+  .headline{
+    text-align:center;
+    padding:6px 0 18px;
+  }
+  .headline .amt{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:34px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .headline .amt.profit{color:var(--green);}
+  .headline .amt.loss{color:var(--red);}
+  .headline .lbl{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-top:4px;
+  }
+
+  .banner{
+    font-size:13px;
+    line-height:1.5;
+    padding:12px 14px;
+    border-radius:10px;
+    margin-bottom:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .banner.ok{background:rgba(47,191,113,0.08);border:1px solid rgba(47,191,113,0.3);color:var(--green);}
+  .banner.warn{background:rgba(229,72,77,0.08);border:1px solid rgba(229,72,77,0.3);color:var(--red);}
+
+  footer{
+    text-align:center;
+    color:var(--ink-dim);
+    font-size:11px;
+    margin-top:24px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Stake Split</div>
+    <h1>Hedge Calculator</h1>
+    <p class="sub">Enter your total stake and each outcome's odds. The split is calculated so your payout is identical no matter which outcome wins.</p>
+  </header>
+
+  <div class="card">
+    <h2>Total Stake</h2>
+    <div class="stake-row">
+      <select id="currency" class="currency-select">
+        <option value="₦" selected>₦</option>
+        <option value="$">$</option>
+        <option value="£">£</option>
+        <option value="€">€</option>
+        <option value="">#</option>
+      </select>
+      <input type="number" id="totalStake" value="10000" min="0" step="any" inputmode="decimal">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Outcomes &amp; Odds</h2>
+    <div id="outcomes"></div>
+    <button class="add-btn" id="addOutcome">+ add another outcome</button>
+  </div>
+
+  <div id="warningBanner"></div>
+
+  <div class="card">
+    <div class="headline">
+      <div class="amt" id="profitAmt">—</div>
+      <div class="lbl" id="profitLbl">guaranteed result</div>
+    </div>
+    <div class="bar" id="stakeBar"></div>
+    <div id="stakeBreakdown"></div>
+    <div class="result-row">
+      <span class="result-label">Locked payout (either outcome)</span>
+      <span class="result-value" id="payoutVal">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Market edge</span>
+      <span class="result-value" id="edgeVal">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Return on stake</span>
+      <span class="result-value" id="roiVal">—</span>
+    </div>
+  </div>
+
+  <footer>Numbers only — this doesn't verify odds are still live, account limits, or execution slippage. Recheck both odds right before placing either stake.</footer>
+</div>
+
+<script>
+const outcomesEl = document.getElementById('outcomes');
+const barColors = ['#C9A227','#4A90D9','#7B61FF','#E58E26','#2FBF71','#E5484D'];
+
+let outcomes = [
+  {label:'Outcome A', odds:1.62},
+  {label:'Outcome B', odds:4.50}
+];
+
+function renderOutcomes(){
+  outcomesEl.innerHTML = '';
+  outcomes.forEach((o,i)=>{
+    const row = document.createElement('div');
+    row.className = 'outcome';
+    row.innerHTML = `
+      <div>
+        <span class="outcome-num">OUTCOME ${i+1}</span>
+        <input type="text" data-idx="${i}" data-field="label" value="${o.label}">
+      </div>
+      <div>
+        <span class="outcome-num">ODDS</span>
+        <input type="number" data-idx="${i}" data-field="odds" value="${o.odds}" min="1.01" step="0.01" inputmode="decimal">
+      </div>
+      <button class="remove-btn" data-idx="${i}" title="remove">×</button>
+    `;
+    outcomesEl.appendChild(row);
+  });
+
+  outcomesEl.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const idx = +e.target.dataset.idx;
+      const field = e.target.dataset.field;
+      outcomes[idx][field] = field==='odds' ? parseFloat(e.target.value)||0 : e.target.value;
+      calculate();
+    });
+  });
+  outcomesEl.querySelectorAll('.remove-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = +e.target.dataset.idx;
+      if(outcomes.length <= 2) return;
+      outcomes.splice(idx,1);
+      renderOutcomes();
+      calculate();
+    });
+  });
+}
+
+document.getElementById('addOutcome').addEventListener('click', ()=>{
+  outcomes.push({label:`Outcome ${String.fromCharCode(65+outcomes.length)}`, odds:2.00});
+  renderOutcomes();
+  calculate();
+});
+
+function fmt(n){
+  return n.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function calculate(){
+  const currency = document.getElementById('currency').value;
+  const stake = parseFloat(document.getElementById('totalStake').value)||0;
+
+  const valid = outcomes.every(o=>o.odds>1);
+  const impliedArr = outcomes.map(o=>1/o.odds);
+  const totalImplied = impliedArr.reduce((a,b)=>a+b,0);
+
+  const warningBanner = document.getElementById('warningBanner');
+  const profitAmt = document.getElementById('profitAmt');
+  const profitLbl = document.getElementById('profitLbl');
+  const payoutVal = document.getElementById('payoutVal');
+  const edgeVal = document.getElementById('edgeVal');
+  const roiVal = document.getElementById('roiVal');
+  const bar = document.getElementById('stakeBar');
+  const breakdown = document.getElementById('stakeBreakdown');
+
+  if(!valid || stake<=0 || totalImplied<=0){
+    profitAmt.textContent = '—';
+    payoutVal.textContent = edgeVal.textContent = roiVal.textContent = '—';
+    bar.innerHTML = ''; breakdown.innerHTML = ''; warningBanner.innerHTML='';
+    return;
+  }
+
+  const payout = stake/totalImplied;
+  const stakes = impliedArr.map(p=> (p/totalImplied)*stake );
+  const profit = payout - stake;
+  const roi = (profit/stake)*100;
+  const edge = (1-totalImplied)*100;
+
+  profitAmt.textContent = (currency||'') + fmt(Math.abs(profit)) + (profit<0?' loss':'');
+  profitAmt.className = 'amt ' + (profit>=0?'profit':'loss');
+  profitLbl.textContent = profit>=0 ? 'guaranteed profit, either outcome' : 'guaranteed loss, either outcome';
+
+  payoutVal.textContent = currency + fmt(payout);
+  edgeVal.textContent = (edge>=0?'+':'') + edge.toFixed(2) + '%';
+  edgeVal.style.color = edge>=0 ? 'var(--green)' : 'var(--red)';
+  roiVal.textContent = (roi>=0?'+':'') + roi.toFixed(2) + '%';
+  roiVal.style.color = roi>=0 ? 'var(--green)' : 'var(--red)';
+
+  bar.innerHTML = '';
+  stakes.forEach((s,i)=>{
+    const seg = document.createElement('div');
+    seg.className = 'bar-seg';
+    const pct = (s/stake)*100;
+    seg.style.width = pct + '%';
+    seg.style.background = barColors[i % barColors.length];
+    seg.textContent = pct>10 ? pct.toFixed(0)+'%' : '';
+    bar.appendChild(seg);
+  });
+
+  breakdown.innerHTML = '';
+  stakes.forEach((s,i)=>{
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.innerHTML = `
+      <span class="result-label">
+        <span class="stake-name" style="color:${barColors[i%barColors.length]}">${outcomes[i].label || 'Outcome '+(i+1)} @ ${outcomes[i].odds}</span>
+        stake to place
+      </span>
+      <span class="result-value">${currency}${fmt(s)}</span>
+    `;
+    breakdown.appendChild(row);
+  });
+
+  if(totalImplied < 1){
+    warningBanner.innerHTML = `<div class="banner ok">Arbitrage exists — implied probability totals ${(totalImplied*100).toFixed(2)}%. Splitting as below locks in profit regardless of outcome, as long as both odds hold when you place them.</div>`;
+  } else {
+    warningBanner.innerHTML = `<div class="banner warn">No arbitrage here — implied probability totals ${(totalImplied*100).toFixed(2)}%. This split still equalizes your result across outcomes, but that result is a loss, not a profit.</div>`;
+  }
+}
+
+document.getElementById('totalStake').addEventListener('input', calculate);
+document.getElementById('currency').addEventListener('change', calculate);
+
+renderOutcomes();
+calculate();
+</script>
+</body>
+</html>
